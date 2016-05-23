@@ -31,7 +31,7 @@
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
-  <artifactId>plumber-plugin</artifactId>
+  <artifactId>plumber</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Plumber plugin</name>
