@@ -107,7 +107,8 @@
     <dependency>
       <groupId>org.codehaus.groovy</groupId>
       <artifactId>groovy-all</artifactId>
-      <version>1.8.9</version>
+      <!-- TODO: Figure out why test execution hangs with Groovy 2.x, but actual functionality in Jenkins still works fine. -->
+      <version>1.8.6</version>
       <scope>provided</scope> <!-- from jenkins-core -->
     </dependency>
     <dependency>
@@ -142,7 +143,7 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>pipeline-action-plugin</artifactId>
+      <artifactId>pipeline-action</artifactId>
       <version>${pipeline-action.version}</version>
     </dependency>
 
@@ -176,7 +177,7 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>pipeline-action-plugin</artifactId>
+      <artifactId>pipeline-action</artifactId>
       <version>${pipeline-action.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
