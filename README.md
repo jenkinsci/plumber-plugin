@@ -39,20 +39,20 @@ plumber {
         action {
             script "echo left"
         }
-        after "pants"
+        after "obtain pants"
     }
     phase {
         name "right leg"
         action {
-            script "echo echo right"
+            script "echo right"
         }
-        after "pants"
+        after "obtain pants"
     }
     
 }
 ```
 
-In this example, the second two "phases" can be executed in parallel, as they have a common previous phase they depend on: `after "obtain pants"`. `script` is `sh` on unix, and `bat` on windows (plumber takes care of that as well). 
+In this example, the final two "phases" can be executed in parallel, as they have a common previous phase they depend on: `after "obtain pants"`. `script` is `sh` on unix, and `bat` on windows (plumber takes care of that as well). 
 
 You can embed pipeline script by using `pipeline` instead of action (there are many actions built in covering high level tasks).
 
