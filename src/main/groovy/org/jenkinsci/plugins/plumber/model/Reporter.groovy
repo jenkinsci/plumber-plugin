@@ -46,6 +46,17 @@ public class Reporter extends AbstractPlumberModel {
 
     }
 
+    public Reporter(Map<String,Object> args) {
+        if (args != null) {
+            validateMapFields(args.keySet())
+
+            this.name = args.name
+            if (args.containsKey("config") && args.config instanceof Map) {
+                this.config = new MappedClosure((Map<String, Object>) args.config)
+            }
+        }
+    }
+
     @Whitelisted
     Reporter name(String val) {
         fieldVal("name", val)

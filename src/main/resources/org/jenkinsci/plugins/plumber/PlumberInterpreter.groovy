@@ -32,6 +32,8 @@ import org.jenkinsci.plugins.plumber.model.Action
 import org.jenkinsci.plugins.plumber.model.MappedClosure
 import org.jenkinsci.plugins.plumber.model.Notifications
 import org.jenkinsci.plugins.plumber.model.Phase
+import org.jenkinsci.plugins.plumber.model.PipelineClosureWrapper
+import org.jenkinsci.plugins.plumber.model.PipelineScriptValidator
 import org.jenkinsci.plugins.plumber.model.PlumberConfig
 import org.jenkinsci.plugins.plumber.model.Root
 import org.jenkinsci.plugins.plumber.model.SCM
@@ -56,8 +58,8 @@ class PlumberInterpreter implements Serializable {
         executePipeline(root, doCodeGen)
     }
 
-    def call(String closureString, Boolean doCodeGen = false) {
-        Root root = getRootConfig(closureString)
+    def call(String yamlString, Boolean doCodeGen = false) {
+        Root root = getRootConfig(yamlString)
         executePipeline(root, doCodeGen)
     }
 
@@ -101,7 +103,7 @@ class PlumberInterpreter implements Serializable {
     @NonCPS
     def getRootConfig(String s) {
         def conf = new PlumberConfig()
-        conf.fromString("{ -> ${s} }")
+        conf.fromYaml(s)
         return conf.getConfig()
     }
 
@@ -177,7 +179,12 @@ class PlumberInterpreter implements Serializable {
                     } else if (phase.pipeline != null) {
                         debugLog(root.debug, "Executing Pipeline closure, wrapped in catchError")
                         script.catchError {
-                            Closure closure = phase.pipeline.closure
+                            Closure closure
+                            if (phase.pipeline.closure != null) {
+                                closure = phase.pipeline.closure
+                            } else {
+                                closure = validatedInlinePipeline(phase.pipeline.closureString)
+                            }
                             closure.delegate = script
                             closure.resolveStrategy = Closure.DELEGATE_FIRST
                             closure.call()
@@ -348,6 +355,7 @@ class PlumberInterpreter implements Serializable {
         } else {
             return {
                 debugLog(debug, "Running on arbitrary node")
+
                 script.node {
                     if (phase.clean) {
                         debugLog(debug, "Cleaning workspace before phase execution")
@@ -410,5 +418,19 @@ class PlumberInterpreter implements Serializable {
         return notifiers
     }
 
+    private Closure validatedInlinePipeline(String inlinePipeline) {
+        Closure argClosure = script.evaluate("{ -> ${inlinePipeline} }")
+        def validator = new PipelineScriptValidator()
+        argClosure.delegate = validator
+        argClosure.resolveStrategy = Closure.DELEGATE_ONLY
+        argClosure.call()
+
+        if (!validator.invalidStepsUsed.isEmpty()) {
+            Utils.throwIllegalArgs("Illegal Pipeline steps used in inline Pipeline - ${validator.invalidStepsUsed.join(', ')}")
+        } else {
+            return script.evaluate("{ -> ${inlinePipeline} }")
+        }
+
+    }
 
 }

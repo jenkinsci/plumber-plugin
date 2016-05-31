@@ -42,13 +42,21 @@ public class PipelineClosureWrapper implements Serializable {
     Closure closure
 
     @Whitelisted
+    String closureString
+
+    @Whitelisted
     public PipelineClosureWrapper(Closure c) {
         this.closure = c
     }
 
     @Whitelisted
+    public PipelineClosureWrapper(String val) {
+        this.closureString = val
+    }
+
+    @Whitelisted
     public PipelineClosureWrapper closure(Closure val) {
-        this.closure = closure
+        this.closure = val
         return this
     }
 }

@@ -136,6 +136,28 @@ public abstract class AbstractPlumberModel<T extends AbstractPlumberModel<T>> im
     }
 
     /**
+     * Gets a list of all field names on this class.
+     *
+     * @return List of field names
+     */
+    public List<String> fieldNames() {
+        return this.class.declaredFields.findAll { !it.synthetic }.collect { it.name }
+    }
+
+    /**
+     * Throws an exception if undefined fields are specified in a Map config.
+     *
+     * @param mapFields List of fields specified in the Map config.
+     * @throws IllegalArgumentException
+     */
+    public void validateMapFields(Set<String> mapFields) throws IllegalArgumentException {
+        def extraFields = mapFields - fieldNames()
+        if (!extraFields.isEmpty()) {
+            throw new IllegalArgumentException("Got field(s) ${extraFields} which does not exist for ${this.class.name}")
+        }
+    }
+
+    /**
      * Transforms this node of the plumber model and everything below it into a simple form for later processing. 
      *
      * @return Map of the plumber model from this node downward in a simple name/args/closures form for each closure.
