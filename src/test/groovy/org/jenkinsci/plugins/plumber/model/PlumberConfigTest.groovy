@@ -349,6 +349,7 @@ phases:
 
         assertNull(p.action)
         assertNotNull(p.pipeline)
-        assertTrue(p.pipeline.closure instanceof Closure)
+        assertNull(p.pipeline.closure)
+        assertNotNull(p.pipeline.closureString)
     }
 }
