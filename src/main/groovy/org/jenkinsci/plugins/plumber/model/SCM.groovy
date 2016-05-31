@@ -48,6 +48,21 @@ public class SCM extends AbstractPlumberModel {
 
     }
 
+    public SCM(Map<String,Object> args) {
+        if (args != null) {
+            validateMapFields(args.keySet())
+
+            this.name = args.name
+            if (args.containsKey("dir") && args.dir != null) {
+                this.directory = args.dir
+            }
+            if (args.containsKey("config") && args.config instanceof Map) {
+                this.config = new MappedClosure((Map<String, Object>) args.config)
+            }
+
+        }
+    }
+
     @Whitelisted
     SCM name(String val) {
         fieldVal("name", val)

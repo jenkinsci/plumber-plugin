@@ -21,19 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-plumber {
-    debug true
-    parallelism 1
-    phase {
-        name 'pants'
-        action {
-            script 'echo onePhase'
-        }
-    }
-    phase {
-        name 'trousers'
-        action {
-            script 'echo twoPhase'
-        }
-    }
-}
+plumber """
+debug: true
+phases:
+  - name: "first-phase"
+    action:
+      script: "echo 'foo' > foo"
+  - name: "second-phase"
+    action:
+      script: "test -f foo"
+    after: "first-phase"
+  - name: "third-phase"
+    clean: true
+    action:
+      script: "test ! -f foo"
+    after: "second-phase"
+"""
+

@@ -21,19 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-plumber {
-    debug true
-    parallelism 1
-    phase {
-        name 'pants'
-        action {
-            script 'echo onePhase'
+
+plumber '''
+debug: true
+phases:
+  - name: pants
+    pipeline: |
+      stage "FAIL HARD"
+      def badParallel = ["foo": {
+        echo "pants"
+      }]
+      parallel badParallel
+      node {
+        withEnv(["FOO=bar"]) {
+          echo "FOO is ${env.FOO}"
         }
-    }
-    phase {
-        name 'trousers'
-        action {
-            script 'echo twoPhase'
-        }
-    }
-}
+      }
+'''

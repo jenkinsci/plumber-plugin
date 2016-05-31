@@ -46,6 +46,15 @@ public class Unstash extends AbstractPlumberModel {
 
     }
 
+    public Unstash(Map<String,Object> args) {
+        if (args != null) {
+            validateMapFields(args.keySet())
+
+            this.fromPhase = args.fromPhase
+            this.dir = args.dir
+        }
+    }
+
     @Whitelisted
     Unstash fromPhase(String val) {
         fieldVal("fromPhase", val)

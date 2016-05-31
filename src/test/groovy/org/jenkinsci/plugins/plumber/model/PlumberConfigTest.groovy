@@ -46,6 +46,21 @@ class PlumberConfigTest {
     }
 
     @Test
+    public void testBasicYamlConfig() {
+        def config = new PlumberConfig()
+        def y = """
+phases:
+  - name: 'foo'
+    action:
+      script: 'echo hello'
+"""
+        config.fromYaml(y)
+        def root = config.getConfig()
+
+        assertTrue(root.phases.size() == 1)
+    }
+
+    @Test
     public void testPhaseOverrides() {
         def plumberConfig = new PlumberConfig()
 
@@ -108,6 +123,66 @@ class PlumberConfigTest {
     }
 
     @Test
+    public void testYamlPhaseOverrides() {
+        def plumberConfig = new PlumberConfig()
+
+        def y = """
+env:
+  foo: bar
+  boo: far
+
+archiveDirs:
+  - one/dir
+  - second/dir
+
+stashDirs:
+  - stash/one
+  - stash/two
+
+notifications:
+  configs:
+    - name: email
+      to: some@one.com
+  onSuccess: true
+
+treatUnstableAsSuccess: true
+
+phases:
+  - name: overridePhase
+    env:
+      foo: banana
+      pants: trousers
+    archiveDirs:
+      - third/dir
+    treatUnstableAsSuccess: false
+    notifications:
+      configs:
+        - name: email
+          to: someone@else.com
+      onSuccess: false
+    action:
+      script: 'echo hello'
+"""
+
+        plumberConfig.fromYaml(y)
+
+        def root = plumberConfig.getConfig()
+
+        def phase = root.phases.first()
+
+        def overrides = phase.getOverrides(root)
+
+        assertEquals("third/dir", overrides.archiveDirs)
+        assertEquals("stash/one,stash/two", overrides.stashDirs)
+        assertEquals("banana", overrides.env?.foo)
+        assertEquals("trousers", overrides.env?.pants)
+        assertEquals("far", overrides.env?.boo)
+        assertEquals(false, overrides.notifications?.onSuccess)
+        assertEquals("someone@else.com", overrides.notifications?.configs?.find { it.name == "email" }?.to)
+        assertFalse(overrides.treatUnstableAsSuccess)
+    }
+
+    @Test
     public void testAction() {
         def config = new PlumberConfig()
         def c = {
@@ -122,6 +197,31 @@ class PlumberConfigTest {
         }
 
         config.fromClosure(c)
+        def root = config.getConfig()
+
+        assertTrue(root.phases.size() == 1)
+        def actionConfig = root.phases[0].action
+        assertNotNull(actionConfig)
+        assertNotNull(actionConfig.getMap())
+
+        assertNull(root.phases[0].pipeline)
+        assertEquals("trousers", actionConfig.getMap().pants)
+        assertEquals("polos", actionConfig.getMap().shirts)
+        assertEquals("simpleEcho", actionConfig.getMap().name)
+    }
+
+    @Test
+    public void testYamlAction() {
+        def config = new PlumberConfig()
+        def y = """
+phases:
+  - name: foo
+    action:
+      name: simpleEcho
+      pants: trousers
+      shirts: polos
+"""
+        config.fromYaml(y)
         def root = config.getConfig()
 
         assertTrue(root.phases.size() == 1)
@@ -174,6 +274,42 @@ class PlumberConfigTest {
     }
 
     @Test
+    public void testYamlMatrix() {
+        def config = new PlumberConfig()
+        def y = """
+phases:
+  - name: foo
+    matrix:
+      axes:
+        FOO:
+          - bar
+          - baz
+    action:
+      script "echo hello"
+"""
+        config.fromYaml(y)
+
+        def root = config.getConfig()
+
+        assertTrue(root.phases.size() == 1)
+
+        def executionSets = root.executionSets()
+
+        assertTrue(executionSets.size() == 1)
+
+        def phasesFromExSet = executionSets.first().phases
+
+        assertTrue(phasesFromExSet.size() == 2)
+
+        assertTrue(phasesFromExSet.any { Phase p ->
+            p.name == "foo+FOO=bar" && p.env != null && p.env.get("FOO") != null && p.env.get("FOO") == "bar"
+        })
+        assertTrue(phasesFromExSet.any { Phase p ->
+            p.name == "foo+FOO=baz" && p.env != null && p.env.get("FOO") != null && p.env.get("FOO") == "baz"
+        })
+    }
+
+    @Test
     public void testInlinePipeline() {
         def config = new PlumberConfig()
         def c = {
@@ -196,4 +332,24 @@ class PlumberConfigTest {
         assertTrue(p.pipeline.closure instanceof Closure)
     }
 
+    @Test
+    public void testYamlInlinePipeline() {
+        def config = new PlumberConfig()
+        def y = """
+phases:
+  - name: foo
+    pipeline: sh "Tada"
+"""
+        config.fromYaml(y)
+
+        def root = config.getConfig()
+
+        assertTrue(root.phases.size() == 1)
+        Phase p = root.phases[0]
+
+        assertNull(p.action)
+        assertNotNull(p.pipeline)
+        assertNull(p.pipeline.closure)
+        assertNotNull(p.pipeline.closureString)
+    }
 }
