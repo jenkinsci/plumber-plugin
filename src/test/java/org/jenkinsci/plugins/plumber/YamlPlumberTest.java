@@ -159,4 +159,17 @@ public class YamlPlumberTest extends AbstractPlumberTest {
         });
     }
 
+    @Test
+    public void testReadFromYamlFile() throws Exception {
+        prepRepoWithJenkinsfileAndOtherFiles("readFromYamlFile", "readFromYamlFile.yml");
+
+        story.addStep(new Statement() {
+            @Override public void evaluate() throws Throwable {
+                WorkflowRun b = getAndStartBuild();
+                story.j.assertLogContains("FOO is bar",
+                        story.j.assertBuildStatusSuccess(story.j.waitForCompletion(b)));
+            }
+        });
+    }
+
 }

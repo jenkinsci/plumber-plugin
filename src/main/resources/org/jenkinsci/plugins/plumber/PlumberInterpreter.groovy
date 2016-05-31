@@ -32,7 +32,6 @@ import org.jenkinsci.plugins.plumber.model.Action
 import org.jenkinsci.plugins.plumber.model.MappedClosure
 import org.jenkinsci.plugins.plumber.model.Notifications
 import org.jenkinsci.plugins.plumber.model.Phase
-import org.jenkinsci.plugins.plumber.model.PipelineClosureWrapper
 import org.jenkinsci.plugins.plumber.model.PipelineScriptValidator
 import org.jenkinsci.plugins.plumber.model.PlumberConfig
 import org.jenkinsci.plugins.plumber.model.Root
@@ -45,6 +44,21 @@ class PlumberInterpreter implements Serializable {
 
     public PlumberInterpreter(CpsScript script) {
         this.script = script;
+    }
+
+    def fromYaml(String yamlFile) {
+        def yamlText
+
+        // Need to run on some arbitrary node to read the file.
+        // TODO: Find a way to just read that file from the parent flyweight.
+        script.node {
+            // Also annoyingly need to check out SCM!
+            script.checkout(script.scm)
+            yamlText = script.readFile yamlFile
+        }
+
+        // But do the actual execution outside of the node.
+        call(yamlText)
     }
 
     def call(CpsClosure closure, Boolean doCodeGen = false) {

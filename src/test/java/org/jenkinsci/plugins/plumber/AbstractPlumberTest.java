@@ -46,22 +46,39 @@ public abstract class AbstractPlumberTest {
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
 
     protected String pipelineSourceFromResources(String pipelineName) throws IOException {
-        String pipelineSource = null;
+        return fileContentsFromResources(pipelineName + ".groovy");
+    }
 
-        URL url = getClass().getResource("/" + pipelineName + ".groovy");
+    protected String fileContentsFromResources(String fileName) throws IOException {
+        String fileContents = null;
+
+        URL url = getClass().getResource("/" + fileName);
         if (url != null) {
-            pipelineSource = IOUtils.toString(url);
+            fileContents = IOUtils.toString(url);
         }
 
-        return pipelineSource;
+        return fileContents;
+
     }
 
     protected void prepRepoWithJenkinsfile(String pipelineName) throws Exception {
+        prepRepoWithJenkinsfileAndOtherFiles(pipelineName);
+    }
+
+    protected void prepRepoWithJenkinsfileAndOtherFiles(String pipelineName, String... otherFiles) throws Exception {
         sampleRepo.init();
         sampleRepo.write("Jenkinsfile",
                 pipelineSourceFromResources(pipelineName));
-
         sampleRepo.git("add", "Jenkinsfile");
+
+
+        for (String otherFile : otherFiles) {
+            if (otherFile != null) {
+                sampleRepo.write(otherFile, fileContentsFromResources(otherFile));
+                sampleRepo.git("add", otherFile);
+            }
+        }
+
         sampleRepo.git("commit", "--message=files");
     }
 
