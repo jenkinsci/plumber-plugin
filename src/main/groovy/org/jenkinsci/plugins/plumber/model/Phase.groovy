@@ -27,7 +27,10 @@ import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import io.jenkins.plugins.pipelineaction.PipelineAction
+import org.jenkinsci.plugins.plumber.Utils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.jenkinsci.plugins.workflow.cps.CpsGroovyShell
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 import static org.jenkinsci.plugins.plumber.Utils.getTabs
 import static org.jenkinsci.plugins.plumber.Utils.toArgForm
@@ -93,6 +96,90 @@ public class Phase extends AbstractPlumberModel {
 
     public Phase() {
 
+    }
+
+    public Phase(Map<String, Object> args) {
+        if (args != null) {
+            validateMapFields(args.keySet())
+            this.name = args.name
+            if (args.containsKey("before")) {
+                if (args.before instanceof String) {
+                    this.before = [(String)args.before]
+                } else if (args.before instanceof List) {
+                    this.before = (List<String>)args.before
+                }
+            }
+            if (args.containsKey("after")) {
+                if (args.after instanceof String) {
+                    this.after = [(String)args.after]
+                } else if (args.after instanceof List) {
+                    this.after = (List<String>)args.after
+                }
+            }
+            if (args.containsKey("action") && args.action instanceof Map) {
+                this.action = new Action((Map<String,Object>)args.action)
+            }
+            this.label = args.label
+            this.dockerImage = args.dockerImage
+            if (args.containsKey("archiveDirs")) {
+                if (args.archiveDirs instanceof String) {
+                    this.archiveDirs = [(String)args.archiveDirs]
+                } else if (args.archiveDirs instanceof List) {
+                    this.archiveDirs = (List<String>)args.archiveDirs
+                }
+            }
+            if (args.containsKey("stashDirs")) {
+                if (args.stashDirs instanceof String) {
+                    this.stashDirs = [(String)args.stashDirs]
+                } else if (args.stashDirs instanceof List) {
+                    this.stashDirs = (List<String>)args.stashDirs
+                }
+            }
+            if (args.containsKey("scm") && args.scm instanceof List) {
+                args.scm?.each { Map<String,Object> scmMap ->
+                    this.scms.add(new SCM(scmMap))
+                }
+            }
+            if (args.containsKey("reporters") && args.reporters instanceof List) {
+                args.reporters?.each { Map<String,Object> reporterMap ->
+                    this.reporters.add(new Reporter(reporterMap))
+                }
+            }
+            if (args.containsKey("unstash")) {
+                if (args.unstash instanceof List) {
+                    args.unstash?.each { Map<String, Object> unstashMap ->
+                        this.unstash.add(new Unstash(unstashMap))
+                    }
+                } else if (args.unstash instanceof Map) {
+                    this.unstash.add(new Unstash((Map<String,Object>)args.unstash))
+                } else if (args.unstash instanceof String) {
+                    this.unstash.add(new Unstash([fromPhase: args.unstash]))
+                }
+            }
+            if (args.containsKey("notifications") && args.notifications instanceof Map) {
+                this.notifications = new Notifications((Map<String,Object>) args.notifications)
+            }
+            if (args.containsKey("env") && args.env instanceof Map) {
+                args.env?.each { String k, String v ->
+                    this.env.put(k, v)
+                }
+            }
+            if (args.containsKey("matrix") && args.matrix instanceof Map) {
+                this.matrix = new Matrix((Map<String,Object>)args.matrix)
+            }
+            if (args.containsKey("treatUnstableAsSuccess")) {
+                this.treatUnstableAsSuccess = args.treatUnstableAsSuccess
+            }
+            if (args.containsKey("skipSCM")) {
+                this.skipSCM = args.skipSCM
+            }
+            if (args.containsKey("clean")) {
+                this.clean = args.clean
+            }
+            if (args.containsKey("pipeline")) {
+                this.pipeline = new PipelineClosureWrapper((String)args.pipeline)
+            }
+        }
     }
 
     @Whitelisted
@@ -557,6 +644,21 @@ public class Phase extends AbstractPlumberModel {
             return this.class.declaredFields.findAll { !it.synthetic && it.type == Boolean.class }.collectEntries { t ->
                 [(t.name): this."${t.name}"]
             }
+        }
+
+    }
+
+    private PipelineClosureWrapper validatedInlinePipeline(String inlinePipeline) {
+        Closure argClosure = (Closure) new GroovyShell().evaluate("{ -> ${inlinePipeline} }")
+        def validator = new PipelineScriptValidator()
+        argClosure.delegate = validator
+        argClosure.resolveStrategy = Closure.DELEGATE_ONLY
+        argClosure.call()
+
+        if (!validator.invalidStepsUsed.isEmpty()) {
+            throw new IllegalArgumentException("Illegal Pipeline steps used in inline Pipeline - ${validator.invalidStepsUsed.join(', ')}")
+        } else {
+            return new PipelineClosureWrapper((Closure) new GroovyShell().evaluate("{ -> ${inlinePipeline} }"))
         }
 
     }

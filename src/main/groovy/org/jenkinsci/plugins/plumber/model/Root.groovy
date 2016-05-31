@@ -68,6 +68,57 @@ public class Root extends AbstractPlumberModel {
 
     }
 
+    public Root(Map<String, Object> args) {
+        if (args != null) {
+            validateMapFields(args.keySet())
+
+            if (args.containsKey("archiveDirs")) {
+                if (args.archiveDirs instanceof String) {
+                    this.archiveDirs = [(String)args.archiveDirs]
+                } else if (args.archiveDirs instanceof List) {
+                    this.archiveDirs = (List<String>)args.archiveDirs
+                }
+            }
+            if (args.containsKey("stashDirs")) {
+                if (args.stashDirs instanceof String) {
+                    this.stashDirs = [(String)args.stashDirs]
+                } else if (args.stashDirs instanceof List) {
+                    this.stashDirs = (List<String>)args.stashDirs
+                }
+            }
+            if (args.containsKey("phases") && args.phases instanceof List) {
+                args.phases?.each { Map<String,Object> phaseMap ->
+                    this.phases.add(new Phase(phaseMap))
+                }
+            }
+            if (args.containsKey("scm") && args.scm instanceof List) {
+                args.scm?.each { Map<String,Object> scmMap ->
+                    this.scms.add(new SCM(scmMap))
+                }
+            }
+            if (args.containsKey("notifications") && args.notifications instanceof Map) {
+                this.notifications = new Notifications((Map<String,Object>) args.notifications)
+            }
+            if (args.containsKey("env") && args.env instanceof Map) {
+                args.env?.each { String k, String v ->
+                    this.env.put(k, v)
+                }
+            }
+            if (args.containsKey("treatUnstableAsSuccess")) {
+                this.treatUnstableAsSuccess = args.treatUnstableAsSuccess
+            }
+            if (args.containsKey("debug")) {
+                this.debug = args.debug
+            }
+            if (args.containsKey("skipSCM")) {
+                this.skipSCM = args.skipSCM
+            }
+            if (args.containsKey("parallelism") && args.parallelism instanceof Integer) {
+                this.parallelism = (Integer) args.parallelism
+            }
+        }
+    }
+
     @Whitelisted
     Root phase(Closure<?> closure) {
         addClosureValToList("phases", Phase.class, closure)

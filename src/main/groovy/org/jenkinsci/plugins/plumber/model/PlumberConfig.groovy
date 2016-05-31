@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.plumber.model
 import groovy.json.JsonOutput
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.yaml.snakeyaml.Yaml
 
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class PlumberConfig {
@@ -57,6 +58,15 @@ public class PlumberConfig {
     @Whitelisted
     public void fromMap(Map<String,Object> map) {
         root = new Root(map)
+    }
+
+    @Whitelisted
+    public void fromYaml(String str) {
+        Yaml yaml = new Yaml()
+
+        Map<String, Object> plumberYaml = (Map<String, Object>) yaml.load(str)
+
+        root = new Root(plumberYaml)
     }
 
     @Whitelisted

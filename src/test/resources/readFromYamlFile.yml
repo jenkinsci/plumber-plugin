@@ -1,0 +1,7 @@
+debug: true
+phases:
+  - name: pants
+    pipeline: |
+      withEnv(["FOO=bar"]) {
+        echo "FOO is ${env.FOO}"
+      }
