@@ -1,5 +1,5 @@
 # Why Plumber?
-Currently Pipeline script is imperative groovy (ish) script. This has 2 primary problems: 
+Currently Pipeline script is imperative Groovy (ish) script. This has 2 primary problems: 
 
 1. Cognitive load:  programming a pipeline is a cognitive load which users do not expect. It is marketed as a point of power, but the 
 reality is it is too much of a barrier for most users. (user comments like "I tried it; too hard; other plugins didn't work; moved 
@@ -9,7 +9,7 @@ after recording test results" and so on).
 teams. Global Libraries solve this to a degree but end users still need to provide the glue code around shared functions such as
 'node', 'stage', 'parallel'. A declarative approach provides structure for setting up this glue easily and running shared libraries.
   1. Tool-friendliness
-  2. it is very very difficult to make graphical editors for
+  2. it is very very difficult to make graphical editors for a general program.
   3. It is very difficult to visualise an arbitrary pipeline until after it has executed (if not technically impossible as per halting
 problem). Even after execution the flow graph could be more complicated than people are used to today. 
   4. Desire for declarative specification of Pipelines - see https://news.ycombinator.com/item?id=11362376, e.g.
@@ -18,7 +18,7 @@ problem). Even after execution the flow graph could be more complicated than peo
 * Maven - convention over configuration makes what would otherwise be complicated functionality underneath the covers seem trivial and
 consistent. 
   * Standard declarative format for specifying your build.
-  * Repeatable and standard workflow within your build - "mvn clean install" will do basically the same thing on any Maven project.
+  * Repeatable and standard workflow within your build - `mvn clean install` will do basically the same thing on any Maven project.
   * Common behaviors are built into the lifecycle and run in a consistent manner. No need to configure All The Things just to run unit
   tests, get Checkstyle results, etc.
 * Puppet
@@ -73,7 +73,7 @@ consistent.
     * This will change once stage (or equivalent) can be functionally used within parallel.
   * Each phase in an execution set with more than one phase is executed simultaneously within parallel.
 * Actual execution is entirely Pipeline-native - either through an interpreter Pipeline script 
-(https://github.com/michaelneale/plumber/blob/730cc0fa75f88277283d28e2edfeb4ed7335be9c/src/main/resources/org/jenkinsci/plugins/plumber/PlumberInterpreter.groovy)
+(https://github.com/jenkinsci/plumber-plugin/blob/master/src/main/resources/org/jenkinsci/plugins/plumber/PlumberInterpreter.groovy)
 or optionally through generating a Pipeline script that represents the actual execution, printing it out to a file, loading that file 
 and executing it.
   * Outputting Pipeline is largely here for "Export to Pipeline" option to allow users to easily move their build from Plumber to pure
@@ -101,15 +101,14 @@ logically grouping steps is).
 * Notifications can be configured at top-level or per-phase.
   * Notifications have some general configuration (should every phase trigger a notification, should notifications happen before phase
   execution, should they be sent on failure and/or success, etc) and a notifier type with its own configuration.
-  * Notifiers are a special case of PipelineActions for the mailer, HipChat, Slack, whatever integration, also contributed by plugins 
+  * Notifiers are a special case of `PipelineAction`s for the mailer, HipChat, Slack, whatever integration, also contributed by plugins 
   like other actions.
-* SCM - by default, will "checkout scm" in each phase.
+* SCM - by default, will `checkout scm` in each phase.
   * SCM can be overridden at top-level or per-phase.
   * Multiple repos can be checked out at once in different directories.
   * SCM checkout can be skipped as well.
-* Reporters - a.k.a., "Recorder" plugins - can be specified via a PipelineAction for that plugin, i.e., JUnit, static analysis, etc, 
+* Reporters - a.k.a., "Recorder" plugins - can be specified via a `PipelineAction` for that plugin, i.e., JUnit, static analysis, etc, 
 and will be run post-action/pipeline block for a phase.
 
 # Some samples, example syntax, tests, etc
-Tests in source repo: https://github.com/michaelneale/plumber/tree/master/src/test/resources
-
+Tests in source repo: https://github.com/jenkinsci/plumber/tree/master/src/test/resources
