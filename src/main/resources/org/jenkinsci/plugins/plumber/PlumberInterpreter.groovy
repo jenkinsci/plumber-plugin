@@ -47,18 +47,7 @@ class PlumberInterpreter implements Serializable {
     }
 
     def fromYaml(String yamlFile) {
-        def yamlText
-
-        // Need to run on some arbitrary node to read the file.
-        // TODO: Find a way to just read that file from the parent flyweight.
-        script.node {
-            // Also annoyingly need to check out SCM!
-            script.checkout(script.scm)
-            yamlText = script.readFile yamlFile
-        }
-
-        // But do the actual execution outside of the node.
-        call(yamlText)
+        call(script.readTrusted(yamlFile))
     }
 
     def call(CpsClosure closure, Boolean doCodeGen = false) {
